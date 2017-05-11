@@ -1,0 +1,21 @@
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+
+# testing
+/test
+
+# production
+/bin
+
+# database
+/database
+
+# misc
+.DS_Store
+.env
+.swp
+.*.swp
+npm-debug.log*
+todo.txt
