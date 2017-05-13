@@ -173,6 +173,15 @@ function findUserByEmail(email){
     assert(email, 'email must be specified!');
     
     let statement = `SELECT user_id, user_name, email, password FROM users WHERE email='${email}'`;
+    console.log(statement);
+
+    return sqlite3_wrapper.getPromisified(statement, 'SELECT FROM users');
+}
+
+function findUserById(id){
+    assert(id, 'id must be specified!');
+    
+    let statement = `SELECT user_id, user_name, email, password FROM users WHERE user_id='${id}'`;
 
     return sqlite3_wrapper.getPromisified(statement, 'SELECT FROM users');
 }
@@ -319,6 +328,7 @@ module.exports = {
     // API for logged user
     addUser, 
     findUserByEmail,
+    findUserById,
     addMeeting, 
     addDatesAndTimes, 
     getUser, 
