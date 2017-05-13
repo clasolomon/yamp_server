@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "npm run compile && node ./bin/www",
     "compile": "rm -rf bin/ test/ && babel src -d bin && babel src_test -d test",
     "test": "mocha --recursive --reporter spec"
   },
