@@ -169,15 +169,24 @@ function addUser(input){
     return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO users');
 }
 
+/**
+ * Search for a user by email in "users" table.
+ * @param {String} email - the email to search by
+ * @return {Promise}
+ */
 function findUserByEmail(email){
     assert(email, 'email must be specified!');
     
     let statement = `SELECT user_id, user_name, email, password FROM users WHERE email='${email}'`;
-    console.log(statement);
 
     return sqlite3_wrapper.getPromisified(statement, 'SELECT FROM users');
 }
 
+/**
+ * Search for a user by id in "users" table.
+ * @param {String} id - the id to search by
+ * @return {Promise}
+ */
 function findUserById(id){
     assert(id, 'id must be specified!');
     
