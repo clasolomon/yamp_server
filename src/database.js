@@ -72,10 +72,10 @@ function integrityCheck(){
         }).then((result)=>{
             return sqlite3_wrapper.allPromisified('PRAGMA foreign_key_check');
         }).then((result)=>{
-                    if(result.length !== 0){
-                        console.error('[integrityCheck] FOREIGN KEY ERRORS:', result);
-                        throw new Error('foreign key integrity check');
-                    }
+            if(result.length !== 0){
+                console.error('[integrityCheck] FOREIGN KEY ERRORS:', result);
+                throw new Error('foreign key integrity check');
+            }
         }).catch(handleError('ERROR [integrityCheck]'));
 }
 
@@ -98,13 +98,13 @@ function createDatabase(){
     const queryForDatesAndTimes = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="dates_and_times"';
 
     // tables used when user is NOT logged in
-    const other_meetings_SQL = 'CREATE TABLE other_meetings' +
+    const NonMemberMeetings_SQL = 'CREATE TABLE NonMemberMeetings' +
         '(meeting_id TEXT PRIMARY KEY, user_name TEXT, user_email TEXT, meeting_name TEXT, meeting_description TEXT, proposed_dates_and_times TEXT, invite_emails TEXT)';
-    const other_dates_and_times_SQL = 'CREATE TABLE other_dates_and_times' +
-        '(dates_and_times_id TEXT PRIMARY KEY, meeting_id TEXT, atendant_name TEXT, accepted_dates_and_times TEXT, FOREIGN KEY(meeting_id) REFERENCES other_meetings(meeting_id))';
+    const NonMemberMeetingInvitations_SQL = 'CREATE TABLE NonMemberMeetingInvitations' +
+        '(invitation_id TEXT PRIMARY KEY, meeting_id TEXT, atendant_email TEXT, accepted_dates_and_times TEXT, FOREIGN KEY(meeting_id) REFERENCES NonMemberMeetings(meeting_id))';
 
-    const queryForOtherMeetings = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="other_meetings"';
-    const queryForOtherDatesAndTimes = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="other_dates_and_times"';
+    const queryForOtherMeetings = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="NonMemberMeetings"';
+    const queryForOtherDatesAndTimes = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="NonMemberMeetingInvitations"';
 
     return sqlite3_wrapper.getPromisified(queryForUsers)
         .then((result)=>{
@@ -132,18 +132,18 @@ function createDatabase(){
         }).then((result)=>{
             return sqlite3_wrapper.getPromisified(queryForOtherMeetings);
         }).then((result)=>{
-            if(result && result.sql === other_meetings_SQL){
-                console.log('[createDatabase] Table "other_meetings" exists.');
+            if(result && result.sql === NonMemberMeetings_SQL){
+                console.log('[createDatabase] Table "NonMemberMeetings" exists.');
             } else {
-                return sqlite3_wrapper.runPromisified(other_meetings_SQL, 'Create table "other_meetings".');
+                return sqlite3_wrapper.runPromisified(NonMemberMeetings_SQL, 'Create table "NonMemberMeetings".');
             }
         }).then((result)=>{
             return sqlite3_wrapper.getPromisified(queryForOtherDatesAndTimes);
         }).then((result)=>{
-            if(result && result.sql === other_dates_and_times_SQL){
-                console.log('[createDatabase] Table "other_dates_and_times" exists.');
+            if(result && result.sql === NonMemberMeetingInvitations_SQL){
+                console.log('[createDatabase] Table "NonMemberMeetingInvitations" exists.');
             } else {
-                return sqlite3_wrapper.runPromisified(other_dates_and_times_SQL, 'Create table "other_dates_and_times".');
+                return sqlite3_wrapper.runPromisified(NonMemberMeetingInvitations_SQL, 'Create table "NonMemberMeetingInvitations".');
             }
         }).catch(handleError('ERROR [createDatabase]'));
 }
@@ -164,7 +164,7 @@ function addUser(input){
     assert(input.password, 'input.password must be specified!');
 
     let statement = `INSERT INTO users (user_id, user_name, email, password) ` + 
-        `VALUES ("${input.user_id}", "${input.user_name}", "${input.email}", "${input.password}")`;
+        `VALUES ('${input.user_id}', '${input.user_name}', '${input.email}', '${input.password}')`;
 
     return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO users');
 }
@@ -176,7 +176,7 @@ function addUser(input){
  */
 function findUserByEmail(email){
     assert(email, 'email must be specified!');
-    
+
     let statement = `SELECT user_id, user_name, email, password FROM users WHERE email='${email}'`;
 
     return sqlite3_wrapper.getPromisified(statement, 'SELECT FROM users');
@@ -189,7 +189,7 @@ function findUserByEmail(email){
  */
 function findUserById(id){
     assert(id, 'id must be specified!');
-    
+
     let statement = `SELECT user_id, user_name, email, password FROM users WHERE user_id='${id}'`;
 
     return sqlite3_wrapper.getPromisified(statement, 'SELECT FROM users');
@@ -209,7 +209,7 @@ function addMeeting(input){
     assert(input.proposed_dates_and_times, 'input.proposed_dates_and_times must be specified!');
 
     let statement = `INSERT INTO meetings (meeting_id, meeting_name, description, initiated_by, proposed_dates_and_times) ` +
-        `VALUES ("${input.meeting_id}", "${input.meeting_name}", "${input.description}", "${input.initiated_by}", "${input.proposed_dates_and_times}")`;
+        `VALUES ('${input.meeting_id}', '${input.meeting_name}', '${input.description}', '${input.initiated_by}', '${input.proposed_dates_and_times}')`;
 
     return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO meetings')
         .catch(handleError('ERROR [addMeeting]'));
@@ -227,7 +227,7 @@ function addDatesAndTimes(input){
     assert(input.accepted_dates_and_times, 'input.accepted_dates_and_times must be specified!');
 
     let statement = `INSERT INTO dates_and_times (meeting_id, user_id, accepted_dates_and_times) ` +
-        `VALUES ("${input.meeting_id}", "${input.user_id}", "${input.accepted_dates_and_times}")`;
+        `VALUES ('${input.meeting_id}', '${input.user_id}', '${input.accepted_dates_and_times}')`;
 
     return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO dates_and_times')
         .catch(handleError('ERROR [addAcceptedTimes]'));
@@ -242,7 +242,7 @@ async function getUser(user_id){
     assert(user_id, 'user_id must be specified!');
 
     let result;
-    let statement = `SELECT * FROM users WHERE user_id="${user_id}"`;
+    let statement = `SELECT * FROM users WHERE user_id='${user_id}'`;
     await sqlite3_wrapper.getPromisified(statement, 'SELECT FROM users')
         .then((row)=>{ result = row; })
         .catch(handleError('ERROR [getUser]'));
@@ -259,7 +259,7 @@ async function getMeeting(meeting_id){
     assert(meeting_id, 'meeting_id must be specified!');
 
     let result;
-    let statement = `SELECT * FROM meetings WHERE meeting_id="${meeting_id}"`;
+    let statement = `SELECT * FROM meetings WHERE meeting_id='${meeting_id}'`;
 
     await sqlite3_wrapper.getPromisified(statement, 'SELECT FROM meetings')
         .then((row)=>{ result = row; })
@@ -279,7 +279,7 @@ async function getDatesAndTimes(meeting_id, user_id){
     assert(user_id, 'user_id must be specified!');
 
     let result;
-    let statement =`SELECT * FROM dates_and_times WHERE meeting_id="${meeting_id}" AND user_id="${user_id}"`;
+    let statement =`SELECT * FROM dates_and_times WHERE meeting_id='${meeting_id}' AND user_id='${user_id}'`;
 
     await sqlite3_wrapper.getPromisified(statement, 'SELECT FROM dates_and_times')
         .then((row)=>{ result = row; })
@@ -291,44 +291,107 @@ async function getDatesAndTimes(meeting_id, user_id){
 //=============================== API for NOT logged user ==========================================================
 
 /**
- * Add entry to "other_meetings" table.
- * @param {object} input - contains input data for each column in "other_meetings" table
+ * Add entry to "NonMemberMeetings" table.
+ * @param {object} input - contains input data for each column in "NonMemberMeetings" table
  * @return {Promise}
  */
-function addOtherMeeting(input){
+function addNonMemberMeeting(input){
     assert(input, 'input must be specified!');
     assert(input.meeting_id, 'input.meeting_id must be specified!');
     assert(input.user_name , 'input.user_name must be specified!');
     assert(input.user_email , 'input.user_email must be specified!');
     assert(input.meeting_name , 'input.meeting_name must be specified!');
-    assert(input.meeting_description , 'input.meeting_description must be specified!');
+    // meeting description is optional
+    // assert(input.meeting_description , 'input.meeting_description must be specified!');
     assert(input.proposed_dates_and_times , 'input.proposed_dates_and_times must be specified!');
     assert(input.invite_emails , 'input.invite_emails  must be specified!');
 
-    let statement = `INSERT INTO other_meetings (meeting_id, user_name, user_email, meeting_name, meeting_description, proposed_dates_and_times, invite_emails) ` +
-        `VALUES ("${input.meeting_id}", "${input.user_name}", "${input.user_email}", "${input.meeting_name}", "${input.meeting_description}", "${input.proposed_dates_and_times}", "${input.invite_emails}")`;
+    let statement = `INSERT INTO NonMemberMeetings (meeting_id, user_name, user_email, meeting_name, meeting_description, proposed_dates_and_times, invite_emails) ` +
+        `VALUES ('${input.meeting_id}', '${input.user_name}', '${input.user_email}', '${input.meeting_name}', '${input.meeting_description}', '${input.proposed_dates_and_times}', '${input.invite_emails}')`;
 
-    return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO other_meetings')
-        .catch(handleError('ERROR [addOtherMeeting]'));
+    return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO NonMemberMeetings');
 }
 
 /**
- * Add entry to "other_dates_and_times" table.
- * @param {object} input - contains input data for each column in "other_dates_and_times" table
+ * Add participant to "NonMemberMeetingInvitations" table.
+ * @param {object} input - contains input data for each column in "NonMemberMeetingInvitations" table
  * @return {Promise}
  */
-function addOtherDatesAndTimes(input){
+function addNonMemberMeetingInvitation(input){
     assert(input, 'input must be specified!');
-    assert(input.dates_and_times_id, 'input.dates_and_times_id must be specified!');
+    assert(input.invitation_id, 'input.invitation_id must be specified!');
     assert(input.meeting_id , 'input.meeting_id must be specified!');
-    assert(input.atendant_name , 'input.atendant_name must be specified!');
+    assert(input.atendant_email , 'input.atendant_email must be specified!');
     assert(input.accepted_dates_and_times , 'input.accepted_dates_and_times must be specified!');
 
-    let statement = `INSERT INTO other_dates_and_times (dates_and_times_id, meeting_id, atendant_name, accepted_dates_and_times) ` +
-        `VALUES ("${input.dates_and_times_id}", "${input.meeting_id}", "${input.atendant_name}", "${input.accepted_dates_and_times}")`;
 
-    return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO other_dates_and_times')
-        .catch(handleError('ERROR [addOtherDatesAndTimes]'));
+    let statement = `INSERT INTO NonMemberMeetingInvitations (invitation_id, meeting_id, atendant_email, accepted_dates_and_times) ` +
+        `VALUES ('${input.invitation_id}', '${input.meeting_id}', '${input.atendant_email}', '${input.accepted_dates_and_times}')`;
+
+    return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO NonMemberMeetingInvitations');
+}
+
+async function getMeetingInvitation(invitation_id){
+    assert(invitation_id, 'invitation_id must be specified!');
+
+    let result;
+    let statement =`SELECT * FROM NonMemberMeetingInvitations WHERE meeting_id='${invitation_id}'`;
+
+    await sqlite3_wrapper.getPromisified(statement, 'SELECT FROM NonMemberMeetingInvitations')
+        .then((row)=>{ result = row; })
+        .catch(handleError('ERROR [getMeetingInvitation]'));
+
+    return result;
+}
+
+function updateAcceptedDatesAndTimes(invitation_id, accepted_dates_and_times){
+    assert(invitation_id, 'invitation_id must be specified!');
+    assert(accepted_dates_and_times, 'accepted_dates_and_times must be specified!');
+
+    let statement =`UPDATE NonMemberMeetingInvitations SET accepted_dates_and_times='${accepted_dates_and_times}' WHERE invitation_id='${invitation_id}'`;
+
+    console.log('Satement:', statement);
+
+    return sqlite3_wrapper.runPromisified(statement, 'UPDATE NonMemberMeetingInvitations.accepted_dates_and_times');
+}
+
+async function getNonMemberMeeting(meeting_id){
+    assert(meeting_id, 'meeting_id must be specified!');
+
+    let result;
+    let statement =`SELECT * FROM NonMemberMeetings WHERE meeting_id='${meeting_id}'`;
+
+    await sqlite3_wrapper.getPromisified(statement, 'SELECT FROM NonMemberMeetings')
+        .then((row)=>{ result = row; })
+        .catch(handleError('ERROR [getNonMemberMeeting]'));
+
+    return result;
+}
+
+async function getNonMemberMeetingDataAndMeetingInvitationData(invitation_id){
+    assert(invitation_id, 'invitation_id must be specified!');
+
+    let result;
+    let statement =`SELECT NonMemberMeetingInvitations.invitation_id, NonMemberMeetingInvitations.meeting_id, NonMemberMeetingInvitations.atendant_email, NonMemberMeetingInvitations.accepted_dates_and_times, NonMemberMeetings.user_name, NonMemberMeetings.user_email, NonMemberMeetings.meeting_name, NonMemberMeetings.meeting_description, NonMemberMeetings.proposed_dates_and_times, NonMemberMeetings.invite_emails FROM NonMemberMeetingInvitations INNER JOIN NonMemberMeetings ON NonMemberMeetingInvitations.meeting_id = NonMemberMeetings.meeting_id WHERE invitation_id = '${invitation_id}'`;
+
+    await sqlite3_wrapper.getPromisified(statement, 'SELECT FROM NonMemberMeetingInvitations INNER JOIN NonMemberMeetings')
+        .then((row)=>{ result = row; })
+        .catch(handleError('ERROR [getNonMemberMeetingAndMeetingInvitationData]'));
+
+    return result;
+}
+
+async function getAllAcceptedDatesAndTimes(meeting_id){
+    assert(meeting_id, 'meeting_id must be specified!');
+
+    let result;
+    let statement =`SELECT atendant_email, accepted_dates_and_times FROM NonMemberMeetingInvitations WHERE meeting_id = '${meeting_id}'`;
+
+    await sqlite3_wrapper.allPromisified(statement, 'SELECT atendant_email, accepted_dates_and_times FROM NonMemberMeetingInvitations')
+        .then((rows)=>{ result = rows; })
+        .catch(handleError('ERROR [getAllAcceptedDatesAndTimes]'));
+
+    return result;
 }
 
 module.exports = { 
@@ -344,6 +407,11 @@ module.exports = {
     getMeeting, 
     getDatesAndTimes,
     // API for NOT logged user
-    addOtherMeeting,
-    addOtherDatesAndTimes
+    addNonMemberMeeting,
+    addNonMemberMeetingInvitation,
+    updateAcceptedDatesAndTimes,
+    getNonMemberMeetingDataAndMeetingInvitationData,
+    getNonMemberMeeting,
+    getMeetingInvitation,
+    getAllAcceptedDatesAndTimes
 };

@@ -63,6 +63,7 @@ function runPromisified(sqlStatement, statementDescription){
                 console.log('[runPromisified]', statementDescription);
             }
             if(err){
+                console.log('RUN:', err);
                 reject(err);
             } else {
                 // according to sqlite3 documentation:

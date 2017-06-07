@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "npm run compile && node ./bin/www",
+    "start": "npm run compile && NODEMAILER_SERVICE=${NODEMAILER_SERVICE} NODEMAILER_USER=${NODEMAILER_USER} NODEMAILER_PASS=${NODEMAILER_PASS} node ./bin/www",
     "compile": "rm -rf bin/ test/ && babel src -d bin && babel src_test -d test",
     "test": "mocha --recursive --reporter spec"
   },
@@ -16,6 +16,7 @@
     "express": "^4.14.1",
     "express-session": "^1.15.2",
     "morgan": "^1.7.0",
+    "nodemailer": "^4.0.1",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "pug": "^2.0.0-beta10",
