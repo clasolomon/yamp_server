@@ -23,6 +23,7 @@ router.get('/nonMemberMeeting/:invitation_id', function(req, res, next){
         })
         .catch(
             function(err){
+                console.log(err);
                 res.sendStatus(500);
             }
         );
@@ -36,6 +37,7 @@ router.get('/nonMemberAcceptedDatesAndTimes/:meeting_id', function(req, res, nex
         })
         .catch(
             function(err){
+                console.log(err);
                 res.sendStatus(500);
             }
         );
@@ -60,6 +62,7 @@ function changeAcceptedDatesAndTimes(req, res, next){
             })
         .catch(
             function(err){
+                console.log(err);
                 res.sendStatus(500);
             }
         );
@@ -87,6 +90,7 @@ function registerUser(req, res, next){
             })
         .catch(
             function(err){
+                console.log(err);
                 res.sendStatus(500);
             }
         );
@@ -127,8 +131,7 @@ function createMeeting(req, res, next){
         })
         .catch(
             function(err){
-                //TODO log errors
-                console.log("createMeeting err:", err);
+                console.log(err);
                 res.sendStatus(500);
             }
         );
