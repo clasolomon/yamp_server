@@ -11,9 +11,21 @@ function generateHash(password) {
 
 const router = express.Router();
 
+router.all('*', function(req, res, next){
+    console.log('/////////////REQ USER:', req.user);
+    console.log('/////////////REQ SESSION:', req.session);
+    next();
+});
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
     res.render('index', { title: 'Express' });
+});
+
+router.get('/logout', function(req, res, next) {
+    req.logout();
+    res.clearCookie('connect.sid');
+    res.end();
 });
 
 router.get('/nonMemberMeeting/:invitation_id', function(req, res, next){
@@ -28,7 +40,6 @@ router.get('/nonMemberMeeting/:invitation_id', function(req, res, next){
             }
         );
 });
-
 
 router.get('/nonMemberAcceptedDatesAndTimes/:meeting_id', function(req, res, next){
     return database.getAllAcceptedDatesAndTimes(req.params.meeting_id)
@@ -136,6 +147,5 @@ function createMeeting(req, res, next){
             }
         );
 }
-
 
 module.exports = router;

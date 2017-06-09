@@ -10,10 +10,12 @@ function validPassword(password, encrypted) {
 function configurePassport(passport) {  
 
     passport.serializeUser(function(user, done) {
+        console.log('SERIALIZE USER');
         done(null, user.user_id);
     });
 
     passport.deserializeUser(function(id, done) {
+        console.log('DESERIALIZE USER');
         return database.findUserById(id)
             .then(
                 function(user) {
@@ -33,7 +35,7 @@ function configurePassport(passport) {
         passReqToCallback: true,
     },
         function(req, email, password, done) {
-            return database.findUserByEmail(email)//search for user's email in database
+            return database.findUserByEmail(email)// search for user's email in database
                 .then(
                     function(user) {
                         if(!user){// if user's email is not found
