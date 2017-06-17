@@ -7,7 +7,9 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 
 import index from './routes/index';
-import user from './routes/user';
+import users from './routes/users';
+import meetings from './routes/meetings';
+import invitations from './routes/invitations';
 
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
@@ -34,7 +36,9 @@ app.use(passport.initialize());
 app.use(passport.session());  
 
 app.use('/', index);
-app.use('/user', user);
+app.use('/', users);
+app.use('/', meetings);
+app.use('/', invitations);
 
 configurePassport(passport);
 
@@ -47,6 +51,7 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
+    console.log(err);
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};

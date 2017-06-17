@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "npm run compile && NODEMAILER_SERVICE=${NODEMAILER_SERVICE} NODEMAILER_USER=${NODEMAILER_USER} NODEMAILER_PASS=${NODEMAILER_PASS} node ./bin/www",
+    "start": "npm run compile && NODEMAILER_SERVICE=${NODEMAILER_SERVICE} NODEMAILER_USER=${NODEMAILER_USER} NODEMAILER_PASS=${NODEMAILER_PASS} node --inspect ./bin/www",
     "compile": "rm -rf bin/ test/ && babel src -d bin && babel src_test -d test",
     "test": "mocha --recursive --reporter spec"
   },

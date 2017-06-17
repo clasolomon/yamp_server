@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-function sendEmailInvitation(user_name, meeting_name, meeting_link, recipient_email) {
+function sendEmailInvitation(meeting_link, recipient_email) {
     // create and configure transport
     var transporter = nodemailer.createTransport({
         service: process.env.NODEMAILER_SERVICE,
@@ -13,12 +13,11 @@ function sendEmailInvitation(user_name, meeting_name, meeting_link, recipient_em
     var mailOptions = {
         from: 'mailforyamp@gmail.com', 
         to: recipient_email, 
-        subject: `YAMP Invitation to ${meeting_name}`, 
-        text: emailBody(user_name, meeting_link) 
+        subject: 'YAMP Invitation', 
+        text: emailBody(meeting_link) 
     };
     transporter.sendMail(mailOptions, function(error, info){
         if(error){
-            // TODO log error
             console.log(error);
         }else{
             console.log('Message sent: ' + recipient_email);
@@ -26,9 +25,9 @@ function sendEmailInvitation(user_name, meeting_name, meeting_link, recipient_em
     });
 }
 
-function emailBody(user_name, meeting_link){
+function emailBody(meeting_link){
     return `Hello stranger,\n\n
-    You have been invited to a meeting by ${user_name}.\n
+    You have been invited to a meeting.\n
     Please visit the following link and see what is all about:\n
     ${meeting_link}\n\n
     Kind regards,\n

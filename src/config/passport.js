@@ -10,13 +10,11 @@ function validPassword(password, encrypted) {
 function configurePassport(passport) {  
 
     passport.serializeUser(function(user, done) {
-        console.log('SERIALIZE USER');
         done(null, user.user_id);
     });
 
     passport.deserializeUser(function(id, done) {
-        console.log('DESERIALIZE USER');
-        return database.findUserById(id)
+        return database.getUserById(id)
             .then(
                 function(user) {
                     return done(null, user);
@@ -35,7 +33,7 @@ function configurePassport(passport) {
         passReqToCallback: true,
     },
         function(req, email, password, done) {
-            return database.findUserByEmail(email)// search for user's email in database
+            return database.getUserByEmail(email)// search for user's email in database
                 .then(
                     function(user) {
                         if(!user){// if user's email is not found
@@ -44,7 +42,8 @@ function configurePassport(passport) {
                         if(!validPassword(password, user.password)){// if password doesn't match
                             return done(null, false);
                         }
-                        delete user['password'];
+                        // if user is found and password matches
+                        delete user['password']; // do not send the password; no need; not secure
                         return done(null, user);
                     })
                 .catch(
