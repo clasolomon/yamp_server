@@ -97,30 +97,81 @@ function createDatabase(){
     const queryForMeetings = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="Meetings"';
     const queryForInvitations = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="Invitations"';
 
+    const NonMemberMeetings_SQL ='CREATE TABLE NonMemberMeetings' +
+        '(meetingId TEXT PRIMARY KEY, meetingName TEXT, meetingDescription TEXT, username TEXT, userEmail TEXT, proposedDatesAndTimes TEXT)';
+    const NonMemberInvitations_SQL ='CREATE TABLE NonMemberInvitations' +
+        '(invitationId TEXT PRIMARY KEY, meetingId TEXT, attendantEmail TEXT, acceptedDatesAndTimes TEXT, FOREIGN KEY(meetingId) REFERENCES NonMemberMeetings(meetingId))'; 
+
+    const queryForNonMemberMeetings = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="NonMemberMeetings"';
+    const queryForNonMemberInvitations = 'SELECT sql FROM sqlite_master WHERE type="table" AND name="NonMemberInvitations"';
+
     return sqlite3_wrapper.getPromisified(queryForUsers)
-        .then((result)=>{
-            if(result && result.sql === Users_SQL){
-                console.log('[createDatabase] Table "Users" exists.');
-            } else {
-                return sqlite3_wrapper.runPromisified(Users_SQL, 'Create table "Users".');
+        .then(
+            (result)=>{
+                if(result && result.sql === Users_SQL){
+                    console.log('[createDatabase] Table "Users" exists.');
+                } else {
+                    return sqlite3_wrapper.runPromisified(Users_SQL, 'Create table "Users".');
+                }
             }
-        }).then((result)=>{
-            return sqlite3_wrapper.getPromisified(queryForMeetings);
-        }).then((result)=>{
-            if(result && result.sql === Meetings_SQL){
-                console.log('[createDatabase] Table "Meetings" exists.');
-            } else {
-                return sqlite3_wrapper.runPromisified(Meetings_SQL, 'Create table "Meetings".');
+        )
+        .then(
+            (result)=>{
+                return sqlite3_wrapper.getPromisified(queryForMeetings);
             }
-        }).then((result)=>{
-            return sqlite3_wrapper.getPromisified(queryForInvitations);
-        }).then((result)=>{
-            if(result && result.sql === Invitations_SQL){
-                console.log('[createDatabase] Table "Invitations" exists.');
-            } else {
-                return sqlite3_wrapper.runPromisified(Invitations_SQL, 'Create table "Invitations".');
+        )
+        .then(
+            (result)=>{
+                if(result && result.sql === Meetings_SQL){
+                    console.log('[createDatabase] Table "Meetings" exists.');
+                } else {
+                    return sqlite3_wrapper.runPromisified(Meetings_SQL, 'Create table "Meetings".');
+                }
             }
-        }).catch(handleError('ERROR [createDatabase]'));
+        )
+        .then(
+            (result)=>{
+                return sqlite3_wrapper.getPromisified(queryForInvitations);
+            }
+        )
+        .then(
+            (result)=>{
+                if(result && result.sql === Invitations_SQL){
+                    console.log('[createDatabase] Table "Invitations" exists.');
+                } else {
+                    return sqlite3_wrapper.runPromisified(Invitations_SQL, 'Create table "Invitations".');
+                }
+            }
+        )
+        .then(
+            (result)=>{
+                return sqlite3_wrapper.getPromisified(queryForNonMemberMeetings);
+            }
+        )
+        .then(
+            (result)=>{
+                if(result && result.sql === NonMemberMeetings_SQL){
+                    console.log('[createDatabase] Table "NonMemberMeetings" exists.');
+                } else {
+                    return sqlite3_wrapper.runPromisified(NonMemberMeetings_SQL, 'Create table "NonMemberMeetings".');
+                }
+            }
+        )
+        .then(
+            (result)=>{
+                return sqlite3_wrapper.getPromisified(queryForNonMemberInvitations);
+            }
+        )
+        .then(
+            (result)=>{
+                if(result && result.sql === NonMemberInvitations_SQL){
+                    console.log('[createDatabase] Table "NonMemberInvitations" exists.');
+                } else {
+                    return sqlite3_wrapper.runPromisified(NonMemberInvitations_SQL, 'Create table "NonMemberInvitations".');
+                }
+            }
+        )
+        .catch(handleError('ERROR [createDatabase]'));
 }
 
 //=============================== Users ==========================================================
