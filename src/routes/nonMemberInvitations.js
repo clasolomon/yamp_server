@@ -18,7 +18,7 @@ router.post('/nonMemberInvitations', function(req, res, next){
             ()=>{
                 res.json({invitationId: newInvitation.invitationId});
                 // send meeting invitation
-                let meeting_invitation_link = 'http://localhost:3000/meeting-invitation/' + newInvitation.invitationId;
+                let meeting_invitation_link = 'http://localhost:3000/non-member-invitation/' + newInvitation.invitationId;
                 sendEmailInvitation(meeting_invitation_link, newInvitation.attendantEmail);
             }
         )
