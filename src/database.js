@@ -42,11 +42,17 @@ async function openDatabase(databasePath, databaseName){
     databaseFullName = path.join(databasePath, databaseName);
 
     await sqlite3_wrapper.getConnection(databaseFullName)
-        .then((result)=>{
-            return createDatabase();
-        }).then((result)=>{
-            return integrityCheck();
-        }).catch(handleError('ERROR [openDatabase]'));
+        .then(
+            (result)=>{
+                return createDatabase();
+            }
+        )
+        .then(
+            (result)=>{
+                return integrityCheck();
+            }
+        )
+        .catch(handleError('ERROR [openDatabase]'));
 }
 
 /**
@@ -464,6 +470,101 @@ function updateInvitation(input){
     return sqlite3_wrapper.runPromisified(statement, 'UPDATE Invitations');
 }
 
+//===================================== NonMemberMeetings =======================================================
+
+/**
+ * Create non member meeting.
+ * @param {object} input - contains input data for columns in "NonMemberMeetings" table
+ * @return {Promise}
+ */
+function createNonMemberMeeting(input){
+    assert(input, 'input must be specified!');
+    assert(input.meetingId, 'input.meetingId must be specified!');
+    assert(input.meetingName, 'input.meetingName must be specified!');
+    // meeting description is optional
+    // assert(input.meetingDescription, 'input.meetingDescription must be specified!');
+    assert(input.username, 'input.username must be specified!');
+    assert(input.userEmail, 'input.userEmail must be specified!');
+    assert(input.proposedDatesAndTimes, 'input.proposedDatesAndTimes must be specified!');
+
+    let statement = `INSERT INTO NonMemberMeetings (meetingId, meetingName, meetingDescription, username, userEmail, proposedDatesAndTimes) ` +
+        `VALUES ('${input.meetingId}', '${input.meetingName}', '${input.meetingDescription}', '${input.username}', '${input.userEmail}', '${input.proposedDatesAndTimes}')`;
+
+    return sqlite3_wrapper.runPromisified(statement, 'INSERT INTO NonMemberMeetings');
+}
+
+/**
+ * Get all non member meetings.
+ * @return {Promise}
+ */
+function getAllNonMemberMeetings(){
+    let statement = `SELECT meetingId, meetingName, meetingDescription, username, userEmail, proposedDatesAndTimes FROM NonMemberMeetings`;
+    return sqlite3_wrapper.allPromisified(statement, 'SELECT FROM NonMemberMeetings');
+}
+
+/**
+ * Delete all non member meetings.
+ * @return {Promise}
+ */
+function deleteAllNonMemberMeetings(){
+    let statement = `DELETE FROM NonMemberMeetings`;
+    return sqlite3_wrapper.runPromisified(statement, 'DELETE FROM NonMemberMeetings');
+}
+
+/**
+ * Get non member meeting by id.
+ * @param {String} id - the id to search by
+ * @return {Promise}
+ */
+function getNonMemberMeetingById(id){
+    assert(id, 'id must be specified!');
+
+    let statement = `SELECT meetingId, meetingName, meetingDescription, username, userEmail, proposedDatesAndTimes FROM NonMemberMeetings WHERE meetingId='${id}'`;
+
+    return sqlite3_wrapper.getPromisified(statement, 'SELECT FROM NonMemberMeetings');
+}
+
+/**
+ * Delete non member meeting.
+ * @param {String} id - the id of the meeting to be deleted 
+ * @return {Promise}
+ */
+function deleteNonMemberMeeting(id){
+    let statement = `DELETE FROM NonMemberMeetings WHERE meetingId='${id}'`;
+    return sqlite3_wrapper.runPromisified(statement, 'DELETE FROM NonMemberMeetings');
+}
+
+/**
+ * Update non member meeting.
+ * @param {String} input - contains update meeting data
+ * @return {Promise}
+ */
+function updateNonMemberMeeting(input){
+    assert(input, 'input must be specified!');
+    assert(input.meetingId, 'input.meetingId must be specified!');
+
+    let fields = new Array();
+
+    if(input.meetingName){
+        fields[fields.length] = `meetingName='${input.meetingName}'`;
+    }
+    if(input.meeting_description){
+        fields[fields.length] = `meetingDescription='${input.meetingDescription}'`;
+    }
+    if(input.username){
+        fields[fields.length] = `username='${input.username}'`;
+    }
+    if(input.userEmail){
+        fields[fields.length] = `userEmail='${input.userEmail}'`;
+    }
+    if(input.proposedDatesAndTimes){
+        fields[fields.length] = `proposedDatesAndTimes='${input.proposedDatesAndTimes}'`;
+    }
+
+    let statement = `UPDATE NonMemberMeetings SET ${fields.join(', ')} WHERE meetingId='${input.meetingId}'`;
+    return sqlite3_wrapper.runPromisified(statement, 'UPDATE NonMemberMeetings');
+}
+
 //===============================================================================================================
 
 module.exports = { 
@@ -494,5 +595,13 @@ module.exports = {
     deleteAllInvitations,
     getInvitationById,
     updateInvitation,
-    deleteInvitation
+    deleteInvitation, 
+
+    // NonMemberMeetings
+    createNonMemberMeeting, 
+    getAllNonMemberMeetings,
+    deleteAllNonMemberMeetings,
+    getNonMemberMeetingById,
+    deleteNonMemberMeeting,
+    updateNonMemberMeeting
 };
