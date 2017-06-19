@@ -599,7 +599,7 @@ function getAllNonMemberInvitations(){
  * @return {Promise}
  */
 function getNonMemberInvitationsByMeetingId(id){
-    assert(meetingId, 'meetingId must be specified!');
+    assert(id, 'id must be specified!');
 
     let statement = `SELECT invitationId, meetingId, attendantEmail, acceptedDatesAndTimes FROM NonMemberInvitations where meetingId='${id}'`;
 

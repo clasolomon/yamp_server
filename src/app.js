@@ -10,6 +10,8 @@ import index from './routes/index';
 import users from './routes/users';
 import meetings from './routes/meetings';
 import invitations from './routes/invitations';
+import nonMemberMeetings from './routes/nonMemberMeetings';
+import nonMemberInvitations from './routes/nonMemberInvitations';
 
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
@@ -39,6 +41,8 @@ app.use('/', index);
 app.use('/', users);
 app.use('/', meetings);
 app.use('/', invitations);
+app.use('/', nonMemberMeetings);
+app.use('/', nonMemberInvitations);
 
 configurePassport(passport);
 
