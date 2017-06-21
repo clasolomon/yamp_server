@@ -312,6 +312,18 @@ function getAllMeetings(){
 }
 
 /**
+ * Get all meetings initiated by a member.
+ * @return {Promise}
+ */
+function getAllMeetingsByMember(initiated_by){
+    assert(initiated_by, 'initiated_by must be specified!');
+
+    let statement = `SELECT meeting_id, meeting_name, meeting_description, initiated_by, proposed_dates_and_times FROM Meetings WHERE initiated_by='${initiated_by}'`;
+
+    return sqlite3_wrapper.allPromisified(statement, 'SELECT FROM Meetings');
+}
+
+/**
  * Delete all meetings.
  * @return {Promise}
  */
@@ -681,6 +693,7 @@ module.exports = {
     // Meetings
     createMeeting, 
     getAllMeetings,
+    getAllMeetingsByMember,
     deleteAllMeetings,
     getMeetingById,
     updateMeeting,

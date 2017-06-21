@@ -49,7 +49,13 @@ router.delete('/nonMemberMeetings', function(req, res, next){
     return database.deleteAllNonMemberMeetings()
         .then(
             ()=>{
-                res.json(true);
+                // delete all non member meeting invitations
+                return database.deleteAllNonMemberInvitations()
+                    .then(
+                        ()=>{
+                            res.json(true);
+                        }
+                    );
             }
         )
         .catch(
@@ -106,7 +112,13 @@ router.delete('/nonMemberMeetings/:meetingId', function(req, res, next){
     return database.deleteNonMemberMeeting(req.params.meetingId)
         .then(
             ()=>{
-                res.json(true);
+                // delete all non member invitations associated with the deleted meeting
+                return database.deleteAllNonMemberInvitationsByMeetingId(req.params.meetingId)
+                    .then(
+                        ()=>{
+                            res.json(true);
+                        }
+                    )
             }
         )
         .catch(

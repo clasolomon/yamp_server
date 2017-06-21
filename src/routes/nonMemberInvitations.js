@@ -62,6 +62,20 @@ router.get('/nonMemberInvitations', function(req, res, next){
 
 // delete all non member invitations
 router.delete('/nonMemberInvitations', function(req, res, next){
+    if(req.query.meetingId){
+        return database.deleteAllNonMemberInvitationsByMeetingId(req.query.meetingId)
+            .then(
+                ()=>{
+                    res.json(true);
+                }
+            )
+            .catch(
+                (err)=>{
+                    console.log(err);
+                    res.sendStatus(500);
+                }
+            );
+    }
     return database.deleteAllNonMemberInvitations()
         .then(
             ()=>{

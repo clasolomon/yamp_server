@@ -29,6 +29,20 @@ router.post('/meetings', function(req, res, next){
 
 // get a list of all meetings
 router.get('/meetings', function(req, res, next){
+    if(req.query.initiated_by){
+        return database.getAllMeetingsByMember(req.query.initiated_by)
+            .then(
+                (meetings)=>{
+                    res.json(meetings);
+                }
+            )
+            .catch(
+                (err)=>{
+                    console.log(err);
+                    res.sendStatus(500);
+                }
+            );
+    }
     return database.getAllMeetings()
         .then(
             (meetings)=>{
