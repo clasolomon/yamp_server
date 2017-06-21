@@ -77,7 +77,19 @@ router.delete('/users', function(req, res, next){
     return database.deleteAllUsers()
         .then(
             ()=>{
-                res.json(true);
+                // delete all meetings 
+                return database.deleteAllMeetings()
+                    .then(
+                        ()=>{
+                            // delete all invitations
+                            return database.deleteAllInvitations()
+                                .then(
+                                    ()=>{
+                                        res.json(true);
+                                    }
+                                );
+                        }
+                    );
             }
         )
         .catch(
@@ -135,7 +147,38 @@ router.delete('/users/:userId', function(req, res, next){
     return database.deleteUser(req.params.userId)
         .then(
             ()=>{
-                res.json(true);
+                // get all the meetings created by this user
+                return database.getAllMeetingsByUserId(req.params.userId)
+                    .then(
+                        (meetings)=>{
+                            // this array contains the promises for each meeting deletion
+                            let promises = [];
+                            if(meetings){
+                                meetings.map((meeting, index)=>{
+                                    // delete all the invitations to each meeting
+                                    promises[index] = database.deleteAllInvitationsByMeetingId(meeting.meeting_id)
+                                        .then(
+                                            ()=>{
+                                                // finally delete the meeting
+                                                return database.deleteMeeting(meeting.meeting_id);
+                                            }
+                                        )
+                                        .catch(
+                                            (err)=>{
+                                                console.log(err);
+                                                res.sendStatus(500);
+                                            }
+                                        );
+                                });
+                            }
+                            // only after all meetings and associated invitations have been deleted send a response
+                            return Promise.all(promises).then(
+                                ()=>{
+                                    res.json(true);
+                                }
+                            );
+                        }
+                    );
             }
         )
         .catch(

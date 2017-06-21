@@ -315,7 +315,7 @@ function getAllMeetings(){
  * Get all meetings initiated by a member.
  * @return {Promise}
  */
-function getAllMeetingsByMember(initiated_by){
+function getAllMeetingsByUserId(initiated_by){
     assert(initiated_by, 'initiated_by must be specified!');
 
     let statement = `SELECT meeting_id, meeting_name, meeting_description, initiated_by, proposed_dates_and_times FROM Meetings WHERE initiated_by='${initiated_by}'`;
@@ -329,6 +329,18 @@ function getAllMeetingsByMember(initiated_by){
  */
 function deleteAllMeetings(){
     let statement = `DELETE FROM Meetings`;
+    return sqlite3_wrapper.runPromisified(statement, 'DELETE FROM Meetings');
+}
+
+/**
+ * Delete all meetings by user_id.
+ * @param {String} id - the id of the user who initiated the meeting
+ * @return {Promise}
+ */
+function deleteAllMeetingsByUserId(id){
+    assert(id, 'id must be specified!');
+
+    let statement = `DELETE FROM Meetings WHERE initiated_by='${id}'`;
     return sqlite3_wrapper.runPromisified(statement, 'DELETE FROM Meetings');
 }
 
@@ -351,6 +363,8 @@ function getMeetingById(id){
  * @return {Promise}
  */
 function deleteMeeting(id){
+    assert(id, 'id must be specified!');
+
     let statement = `DELETE FROM Meetings WHERE meeting_id='${id}'`;
     return sqlite3_wrapper.runPromisified(statement, 'DELETE FROM Meetings');
 }
@@ -431,6 +445,17 @@ function getInvitationsByMeetingId(meetingId){
  */
 function deleteAllInvitations(){
     let statement = `DELETE FROM Invitations`;
+    return sqlite3_wrapper.runPromisified(statement, 'DELETE FROM Invitations');
+}
+
+/**
+ * Delete all meeting invitations with a certain meeting_id.
+ * @param {String} id - the meeting_id
+ * @return {Promise}
+ */
+function deleteAllInvitationsByMeetingId(id){
+    assert(id, 'id must be specified!');
+    let statement = `DELETE FROM Invitations WHERE meeting_id='${id}'`;
     return sqlite3_wrapper.runPromisified(statement, 'DELETE FROM Invitations');
 }
 
@@ -628,6 +653,17 @@ function deleteAllNonMemberInvitations(){
 }
 
 /**
+ * Delete all non member meeting invitations with a certain meetingId.
+ * @param {String} id - the meetingId
+ * @return {Promise}
+ */
+function deleteAllNonMemberInvitationsByMeetingId(id){
+    assert(id, 'id must be specified!');
+    let statement = `DELETE FROM NonMemberInvitations WHERE meetingId='${id}'`;
+    return sqlite3_wrapper.runPromisified(statement, 'DELETE FROM NonMemberInvitations');
+}
+
+/**
  * Get non member meeting invitation by id.
  * @param {String} id - the id to search by
  * @return {Promise}
@@ -693,8 +729,9 @@ module.exports = {
     // Meetings
     createMeeting, 
     getAllMeetings,
-    getAllMeetingsByMember,
+    getAllMeetingsByUserId,
     deleteAllMeetings,
+    deleteAllMeetingsByUserId,
     getMeetingById,
     updateMeeting,
     deleteMeeting,
@@ -704,6 +741,7 @@ module.exports = {
     getAllInvitations,
     getInvitationsByMeetingId,
     deleteAllInvitations,
+    deleteAllInvitationsByMeetingId,
     getInvitationById,
     updateInvitation,
     deleteInvitation, 
@@ -721,6 +759,7 @@ module.exports = {
     getAllNonMemberInvitations,
     getNonMemberInvitationsByMeetingId,
     deleteAllNonMemberInvitations,
+    deleteAllNonMemberInvitationsByMeetingId,
     getNonMemberInvitationById,
     deleteNonMemberInvitation,
     updateNonMemberInvitation

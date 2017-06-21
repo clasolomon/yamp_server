@@ -30,7 +30,7 @@ router.post('/meetings', function(req, res, next){
 // get a list of all meetings
 router.get('/meetings', function(req, res, next){
     if(req.query.initiated_by){
-        return database.getAllMeetingsByMember(req.query.initiated_by)
+        return database.getAllMeetingsByUserId(req.query.initiated_by)
             .then(
                 (meetings)=>{
                     res.json(meetings);
@@ -62,7 +62,13 @@ router.delete('/meetings', function(req, res, next){
     return database.deleteAllMeetings()
         .then(
             ()=>{
-                res.json(true);
+                // delete all invitations
+                return database.deleteAllInvitations()
+                    .then(
+                        ()=>{
+                            res.json(true);
+                        }
+                    );
             }
         )
         .catch(
@@ -118,7 +124,13 @@ router.delete('/meetings/:meetingId', function(req, res, next){
     return database.deleteMeeting(req.params.meetingId)
         .then(
             ()=>{
-                res.json(true);
+                // delete all invitations to this meeting
+                return database.deleteAllInvitationsByMeetingId(req.params.meetingId)
+                    .then(
+                        ()=>{
+                            res.json(true);
+                        }
+                    );
             }
         )
         .catch(
