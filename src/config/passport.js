@@ -1,57 +1,51 @@
 import LocalStrategy from 'passport-local';
-import database from '../database';
 import bcrypt from 'bcrypt-nodejs';
-import uuidV4 from 'uuid/v4';
+import database from '../database';
 
-function validPassword(password, encrypted) {  
-    return bcrypt.compareSync(password, encrypted);
-};
+function validPassword(password, encrypted) {
+  return bcrypt.compareSync(password, encrypted);
+}
 
-function configurePassport(passport) {  
+function configurePassport(passport) {
+  passport.serializeUser((user, done) => {
+    done(null, user.user_id);
+  });
 
-    passport.serializeUser(function(user, done) {
-        done(null, user.user_id);
-    });
+  passport.deserializeUser((id, done) => database.getUserById(id)
+        .then(
+            user => done(null, user),
+        )
+        .catch(
+            err => done(err),
+        ));
 
-    passport.deserializeUser(function(id, done) {
-        return database.getUserById(id)
-            .then(
-                function(user) {
-                    return done(null, user);
-                }
-            )
-            .catch(
-                function(err){
-                    return done(err);
-                }
-            );
-    });
-
-    passport.use('local-login', new LocalStrategy({
-        usernameField: 'email',
-        passwordField: 'password',
-        passReqToCallback: true,
-    },
-        function(req, email, password, done) {
-            return database.getUserByEmail(email)// search for user's email in database
-                .then(
-                    function(user) {
-                        if(!user){// if user's email is not found
-                            return done(null, false);
-                        }
-                        if(!validPassword(password, user.password)){// if password doesn't match
-                            return done(null, false);
-                        }
-                        // if user is found and password matches
-                        delete user['password']; // do not send the password; no need; not secure
-                        return done(null, user);
-                    })
-                .catch(
-                    function(err){
-                        return done(err);
-                    }
-                );
-        }));
+  passport.use('local-login', new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password',
+    passReqToCallback: true,
+  },
+        // search for user's email in database
+        (req, email, password, done) => database.getUserByEmail(email)
+        .then(
+            (user) => {
+              if (!user) { // if user's email is not found
+                return done(null, false);
+              }
+              if (!validPassword(password, user.password)) { // if password doesn't match
+                return done(null, false);
+              }
+                // if user is found and password matches
+              return done(null, {
+                user_id: user.user_id,
+                user_name: user.user_name,
+                email: user.email,
+              });
+            })
+        .catch(
+            err => done(err),
+        ),
+    ),
+    );
 }
 
 module.exports = configurePassport;

@@ -1,37 +1,31 @@
 import express from 'express';
 import passport from 'passport';
-import database from '../database';
-import bcrypt from 'bcrypt-nodejs';
-import uuidV4 from 'uuid/v4';
-import sendEmailInvitation from '../sendmail';
+import _debug from 'debug';
 
-function generateHash(password) {  
-    return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
-};
-
+const debug = _debug('routes:index');
 const router = express.Router();
 
 // NON_RESOURCE API
-router.get('/logout', function(req, res, next) {
-    req.logout();
-    res.clearCookie('connect.sid');
-    res.end();
+router.get('/logout', (req, res) => {
+  req.logout();
+  res.clearCookie('connect.sid');
+  res.end();
 });
 
-router.post('/login', passport.authenticate('local-login'), (req, res, next)=>{
-    res.json(req.user);
+router.post('/login', passport.authenticate('local-login'), (req, res) => {
+  res.json(req.user);
 });
 
 // OTHERS
-router.all('*', function(req, res, next){
-    console.log('/////////////REQ USER:', req.user);
-    console.log('/////////////REQ SESSION:', req.session);
-    next();
+router.all('*', (req, res, next) => {
+  debug('REQ USER:', req.user);
+  debug('REQ SESSION:', req.session);
+  next();
 });
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-    res.render('index', { title: 'Express' });
+router.get('/', (req, res) => {
+  res.render('index', { title: 'Express' });
 });
 
 module.exports = router;
