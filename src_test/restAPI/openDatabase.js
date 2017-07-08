@@ -1,3 +1,4 @@
+/*
 import assert from 'assert';
 import database from '../../bin/database'; 
 import fs from 'fs';
@@ -36,3 +37,4 @@ describe('openDatabase(database_path, database_name)', function(){
         });
     });
 });
+*/

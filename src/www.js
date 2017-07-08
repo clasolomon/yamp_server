@@ -91,8 +91,12 @@ server.on('listening', onListening);
 /**
  * Create database if database does not exist.
  */
-const databaseName = 'yamp.db';
+let databaseName = 'yamp.db';
 const databasePath = path.join(__dirname, '../database');
+debug(process.env.NODE_ENV);
+if (process.env.NODE_ENV === 'test') {
+  databaseName = 'yamp_test.db';
+}
 database.openDatabase(databasePath, databaseName);
 
 /**
@@ -111,3 +115,5 @@ process.on('SIGTERM', shutdownServer);
 
 // listen for INT signal e.g. Ctrl-C
 process.on('SIGINT', shutdownServer);
+
+export default app;

@@ -1,130 +1,145 @@
 import express from 'express';
-import uuidV4 from 'uuid/v4';
 import _debug from 'debug';
-import database from '../database';
 import sendEmailInvitation from '../sendmail';
+import { invitationsService } from '../services';
 
 const debug = _debug('routes:invitations');
 const router = express.Router();
 
 // create new invitation
+router.post('/invitations', async (req, res, next) => {
+  debug('[POST /invitations]');
+  try {
+    const invitation = await invitationsService.create(req.body);
+    debug(invitation);
+    req.invitation = invitation;
+    next();
+  } catch (e) {
+    switch (e.code) {
+      case 'InvalidInputError':
+        res.status(400).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
+});
+
+// send email invitation
 router.post('/invitations', (req, res) => {
-  const newInvitation = {
-    invitation_id: uuidV4(),
-    meeting_id: req.body.meetingId,
-    attendant_email: req.body.attendantEmail,
-    accepted_dates_and_times: req.body.acceptedDatesAndTimes,
-  };
-  return database.createInvitation(newInvitation)
-        .then(
-            () => {
-              res.json({ invitationId: newInvitation.invitation_id });
-                // send meeting invitation
-              const meetingInvitationLink = `http://localhost:3000/meeting-invitation/${newInvitation.invitation_id}`;
-              sendEmailInvitation(meetingInvitationLink, newInvitation.attendant_email);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
+  debug('[POST /invitations][send email]');
+    // send meeting invitation
+  const meetingInvitationLink = `http://localhost:3000/meeting-invitation/${req.invitation.invitation_id}`;
+  sendEmailInvitation(meetingInvitationLink, req.invitation.attendant_email);
+  res.json(req.invitation);
 });
 
 // get a list of all invitations
-router.get('/invitations', (req, res) => {
-  if (req.query.meeting_id) {
-    return database.getInvitationsByMeetingId(req.query.meeting_id)
-            .then(
-                (invitations) => {
-                  res.json(invitations);
-                },
-            )
-            .catch(
-                (err) => {
-                  debug(err);
-                  res.sendStatus(500);
-                },
-            );
+router.get('/invitations', async (req, res) => {
+  if (req.query.meetingId) {
+    debug('[GET /invitations?meetingId]');
+    try {
+      const invitations = await invitationsService.getAllByMeetingId(req.query.meetingId);
+      res.json(invitations);
+    } catch (e) {
+      switch (e.code) {
+        case 'NotFoundError':
+          res.status(404).json(e);
+          break;
+        default:
+          res.sendStatus(500);
+          throw e;
+      }
+    }
+    return;
   }
-  return database.getAllInvitations()
-        .then(
-            (invitations) => {
-              res.json(invitations);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
+
+  debug('[GET /invitations]');
+  try {
+    const invitations = await invitationsService.getAll();
+    res.json(invitations);
+  } catch (e) {
+    res.sendStatus(500);
+    throw e;
+  }
 });
 
 // delete all invitations
-router.delete('/invitations', (req, res) => database.deleteAllInvitations()
-        .then(
-            () => {
-              res.json(true);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        ));
+router.delete('/invitations', async (req, res) => {
+  if (req.query.meetingId) {
+    debug('[DELETE /invitations?meetingId]');
+    try {
+      await invitationsService.deleteAllByMeetingId(req.query.meetingId);
+      res.json({ message: `All invitations to meeting ${req.query.meetingId} have been deleted!` });
+    } catch (e) {
+      res.sendStatus(500);
+      throw e;
+    }
+    return;
+  }
+
+  debug('[DELETE /invitations]');
+  try {
+    await invitationsService.deleteAll();
+    res.json({ message: 'All invitations have been deleted!' });
+  } catch (e) {
+    res.sendStatus(500);
+    throw e;
+  }
+});
 
 // get invitation with invitationId
-router.get('/invitations/:invitationId', (req, res) => database.getInvitationById(req.params.invitationId)
-        .then(
-            (invitation) => {
-              res.json(invitation);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        ));
+router.get('/invitations/:invitationId', async (req, res) => {
+  debug('[GET /invitations/:invitationId]');
+  try {
+    const invitation = await invitationsService.getById(req.params.invitationId);
+    res.json(invitation);
+  } catch (e) {
+    switch (e.code) {
+      case 'NotFoundError':
+        res.status(404).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
+});
 
 // update invitation with invitationId
-router.put('/invitations/:invitationId', (req, res) => {
-  const modifiedInvitation = {
-    invitation_id: req.params.invitationId,
-    meeting_id: req.body.meetingId,
-    attendant_email: req.body.attendantEmail,
-    accepted_dates_and_times: JSON.stringify(req.body.acceptedDatesAndTimes),
-  };
+router.put('/invitations/:invitationId', async (req, res) => {
+  debug('[PUT /invitations/:invitationId]');
+  req.body.invitationId = req.params.invitationId;
 
-  return database.updateInvitation(modifiedInvitation)
-        .then(
-            () => {
-              res.json(true);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
+  try {
+    const invitation = await invitationsService.update(req.body);
+    res.json(invitation);
+  } catch (e) {
+    switch (e.code) {
+      case 'NotFoundError':
+        res.status(404).json(e);
+        break;
+      case 'InvalidInputError':
+        res.status(400).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
 });
 
 // delete invitation with invitationId
-router.delete('/invitations/:invitationId', (req, res) => database.deleteInvitation(req.params.invitationId)
-        .then(
-            () => {
-              res.json(true);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        ));
+router.delete('/invitations/:invitationId', async (req, res) => {
+  debug('[DELETE /invitations/:invitationId]');
+  try {
+    await invitationsService.deleteOne(req.params.invitationId);
+    res.json({ message: `Invitation ${req.params.invitationId} was deleted successfully!` });
+  } catch (e) {
+    res.sendStatus(500);
+    throw e;
+  }
+});
 
 module.exports = router;

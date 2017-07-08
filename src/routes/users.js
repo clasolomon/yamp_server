@@ -1,198 +1,132 @@
 import express from 'express';
-import bcrypt from 'bcrypt-nodejs';
-import uuidV4 from 'uuid/v4';
 import _debug from 'debug';
-import database from '../database';
+import { usersService } from '../services';
 
 const debug = _debug('routes:users');
-
-function generateHash(password) {
-  return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
-}
-
 const router = express.Router();
 
 // create new user
-router.post('/users', (req, res) => {
-  const newUser = {
-    user_id: uuidV4(),
-    user_name: req.body.username,
-    email: req.body.email,
-    password: generateHash(req.body.password),
-  };
-
-  return database.getUserByEmail(req.body.email)
-        .then(
-            (user) => {
-              if (user) {
-                return res.status(400).json({ error: 'Resource already exists!' });
-              }
-              return database.createUser(newUser)
-                    .then(
-                        () => {
-                          res.json({ userId: newUser.user_id, email: newUser.email });
-                        },
-                    );
-            },
-        ).catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
+router.post('/users', async (req, res) => {
+  debug('[POST /users]');
+  try {
+    const user = await usersService.create(req.body);
+    debug('user:', user);
+    res.json(user);
+  } catch (e) {
+    switch (e.code) {
+      case 'DuplicateError':
+      case 'InvalidInputError':
+        res.status(400).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
 });
 
 // get a list of all users
-router.get('/users', (req, res) => {
+router.get('/users', async (req, res) => {
   if (req.query.email) {
-    return database.getUserByEmail(req.query.email)
-            .then(
-                (user) => {
-                  if (user) {
-                    res.json({
-                      user_id: user.user_id,
-                      user_name: user.user_name,
-                      email: user.email,
-                    });
-                  } else {
-                    res.json(user);
-                  }
-                },
-            )
-            .catch(
-                (err) => {
-                  debug(err);
-                  res.sendStatus(500);
-                },
-            );
+    debug('[GET /users?email]');
+    try {
+      const user = await usersService.getByEmail(req.query.email);
+      debug('user:', user);
+      res.json(user);
+    } catch (e) {
+      switch (e.code) {
+        case 'NotFoundError':
+          res.status(404).json(e);
+          break;
+        default:
+          res.sendStatus(500);
+          throw e;
+      }
+    }
+    return;
   }
-  return database.getAllUsers()
-        .then(
-            (users) => {
-              if (users.length) {
-                const allUsers = users.map(user => ({
-                  user_id: user.user_id,
-                  user_name: user.user_name,
-                  email: user.email,
-                }));
-                res.json(allUsers);
-              } else {
-                res.json(users);
-              }
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
+
+  debug('[GET /users]');
+  try {
+    const users = await usersService.getAll();
+    res.json(users);
+  } catch (e) {
+    res.sendStatus(500);
+    throw e;
+  }
 });
 
 // delete all users
-router.delete('/users', (req, res) => database.deleteAllUsers()
-    .then(
-        () =>
-        // delete all meetings
-        database.deleteAllMeetings()
-        .then(
-            () =>
-            // delete all invitations
-            database.deleteAllInvitations()
-            .then(
-                () => {
-                  res.json(true);
-                },
-            ),
-        ),
-    )
-    .catch(
-        (err) => {
-          debug(err);
-          res.sendStatus(500);
-        },
-    ));
+router.delete('/users', async (req, res) => {
+  debug('[DELETE /users]');
+  try {
+    await usersService.deleteAll();
+    res.json({ message: 'All users have been deleted!' });
+  } catch (e) {
+    res.sendStatus(500);
+    throw e;
+  }
+});
 
-// get user with user_id
-router.get('/users/:userId', (req, res) => database.getUserById(req.params.userId)
-    .then(
-        (user) => {
-          res.json(user);
-        },
-    )
-    .catch(
-        (err) => {
-          debug(err);
-          res.sendStatus(500);
-        },
-    ));
+// get user with userId
+router.get('/users/:userId', async (req, res) => {
+  debug('[GET /users/:userId]');
+  try {
+    const user = await usersService.getById(req.params.userId);
+    debug('user:', user);
+    res.json(user);
+  } catch (e) {
+    switch (e.code) {
+      case 'NotFoundError':
+        res.status(404).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
+});
 
 // update user with userId
-router.put('/users/:userId', (req, res) => {
-  const modifiedUser = {
-    user_id: req.params.userId,
-    user_name: req.body.username,
-    email: req.body.email,
-  };
+router.put('/users/:userId', async (req, res) => {
+  debug('[PUT /users/:userId]');
+  req.body.userId = req.params.userId;
 
-  if (req.body.password) {
-    modifiedUser.password = generateHash(req.body.password);
+  try {
+    const user = await usersService.update(req.body);
+    debug('user:', user);
+    res.json(user);
+  } catch (e) {
+    switch (e.code) {
+      case 'NotFoundError':
+        res.status(404).json(e);
+        break;
+      case 'InvalidInputError':
+        res.status(400).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
   }
-
-  return database.updateUser(modifiedUser)
-        .then(
-            () => {
-              res.json(true);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
 });
 
 // delete user with userId
-router.delete('/users/:userId', (req, res) => database.deleteUser(req.params.userId)
-    .then(
-        () =>
-        // get all the meetings created by this user
-        database.getAllMeetingsByUserId(req.params.userId)
-        .then(
-            (meetings) => {
-              if (meetings.length) {
-                    // this array contains the promises for each meeting deletion
-                const promises = meetings.map(meeting =>
-                        // delete all the invitations to each meeting
-                         database.deleteAllInvitationsByMeetingId(meeting.meeting_id)
-                            .then(
-                                // finally delete the meeting
-                                () => database.deleteMeeting(meeting.meeting_id),
-                            )
-                            .catch(
-                                (err) => {
-                                  debug(err);
-                                  res.sendStatus(500);
-                                },
-                            ));
-                  // after all meetings and associated invitations have been deleted
-                  // send a response
-                return Promise.all(promises).then(
-                        () => {
-                          res.json(true);
-                        },
-                    );
-              }
-              return res.json(true);
-            },
-        ),
-    )
-    .catch(
-        (err) => {
-          debug(err);
-          res.sendStatus(500);
-        },
-    ));
+router.delete('/users/:userId', async (req, res) => {
+  debug('[DELETE /users/:userId]');
+  try {
+    await usersService.deleteOne(req.params.userId);
+    res.json({ message: `User ${req.params.userId} was deleted successfully!` });
+  } catch (e) {
+    switch (e.code) {
+      case 'NotFoundError':
+        res.status(404).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
+});
 
 module.exports = router;

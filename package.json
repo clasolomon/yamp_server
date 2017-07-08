@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npm run compile && NODEMAILER_SERVICE=${NODEMAILER_SERVICE} NODEMAILER_USER=${NODEMAILER_USER} NODEMAILER_PASS=${NODEMAILER_PASS} node --inspect ./bin/www",
     "compile": "npm run eslint && rm -rf bin/ test/ && babel src -d bin && babel src_test -d test",
-    "test": "mocha --recursive --reporter spec",
+    "test": "npm run compile && NODE_ENV='test' mocha --recursive --reporter spec",
     "eslint": "eslint --fix src"
   },
   "dependencies": {
@@ -28,7 +28,12 @@
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
+    "babel-plugin-transform-es2015-destructuring": "^6.23.0",
+    "babel-plugin-transform-es2015-spread": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-env": "^1.1.8",
+    "chai": "^4.0.2",
+    "chai-http": "^3.0.0",
     "eslint": "^3.19.0",
     "eslint-config-airbnb-base": "^11.2.0",
     "eslint-plugin-import": "^2.6.0",

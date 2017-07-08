@@ -1,138 +1,115 @@
 import express from 'express';
-import uuidV4 from 'uuid/v4';
 import _debug from 'debug';
-import database from '../database';
+import { meetingsService } from '../services';
 
 const debug = _debug('routes:meetings');
 const router = express.Router();
 
 // create new meeting
-router.post('/meetings', (req, res) => {
-  const newMeeting = {
-    meeting_id: uuidV4(),
-    meeting_name: req.body.meetingName,
-    meeting_description: req.body.meetingDescription,
-    initiated_by: req.body.initiatedBy,
-    proposed_dates_and_times: JSON.stringify(req.body.proposedDatesAndTimes),
-  };
-  return database.createMeeting(newMeeting)
-        .then(
-            () => {
-              res.json({ meetingId: newMeeting.meeting_id });
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
+router.post('/meetings', async (req, res) => {
+  debug('[POST /meetings]');
+  try {
+    const meeting = await meetingsService.create(req.body);
+    debug(meeting);
+    res.json(meeting);
+  } catch (e) {
+    switch (e.code) {
+      case 'InvalidInputError':
+        res.status(400).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
 });
 
 // get a list of all meetings
-router.get('/meetings', (req, res) => {
-  if (req.query.initiated_by) {
-    return database.getAllMeetingsByUserId(req.query.initiated_by)
-            .then(
-                (meetings) => {
-                  res.json(meetings);
-                },
-            )
-            .catch(
-                (err) => {
-                  debug(err);
-                  res.sendStatus(500);
-                },
-            );
+router.get('/meetings', async (req, res) => {
+  if (req.query.initiatedBy) {
+    debug('[GET /meetings?initiatedBy]');
+    try {
+      const meetings = await meetingsService.getAllByUserId(req.query.initiatedBy);
+      res.json(meetings);
+    } catch (e) {
+      res.sendStatus(500);
+      throw e;
+    }
+    return;
   }
-  return database.getAllMeetings()
-        .then(
-            (meetings) => {
-              res.json(meetings);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
+
+  debug('[GET /meetings]');
+  try {
+    const meetings = await meetingsService.getAll();
+    res.json(meetings);
+  } catch (e) {
+    res.sendStatus(500);
+    throw e;
+  }
 });
 
 // delete all meetings
-router.delete('/meetings', (req, res) => database.deleteAllMeetings()
-        .then(
-            () =>
-                // delete all invitations
-               database.deleteAllInvitations()
-                    .then(
-                        () => {
-                          res.json(true);
-                        },
-                    ),
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        ));
+router.delete('/meetings', async (req, res) => {
+  debug('[DELETE /meetings]');
+  try {
+    await meetingsService.deleteAll();
+    res.json({ message: 'All meetings have been deleted!' });
+  } catch (e) {
+    res.sendStatus(500);
+    throw e;
+  }
+});
 
 // get meeting with meetingId
-router.get('/meetings/:meetingId', (req, res) => database.getMeetingById(req.params.meetingId)
-        .then(
-            (meeting) => {
-              res.json(meeting);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        ));
+router.get('/meetings/:meetingId', async (req, res) => {
+  debug('[GET /meetings/:meetingId]');
+  try {
+    const meeting = await meetingsService.getById(req.params.meetingId);
+    res.json(meeting);
+  } catch (e) {
+    switch (e.code) {
+      case 'NotFoundError':
+        res.status(404).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
+});
 
 // update meeting with meetingId
-router.put('/meetings/:meetingId', (req, res) => {
-  const modifiedMeeting = {
-    meeting_id: req.params.userId,
-    meeting_name: req.body.meetingName,
-    meeting_description: req.body.meetingDescription,
-    initiated_by: req.body.initiatedBy,
-    proposed_dates_and_time: req.body.proposedDatesAndTimes,
-  };
-
-  return database.updateMeeting(modifiedMeeting)
-        .then(
-            () => {
-              res.json(true);
-            },
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        );
+router.put('/meetings/:meetingId', async (req, res) => {
+  debug('[PUT /meetings/:meetingId]');
+  req.body.meetingId = req.params.meetingId;
+  try {
+    const meeting = await meetingsService.update(req.body);
+    res.json(meeting);
+  } catch (e) {
+    switch (e.code) {
+      case 'NotFoundError':
+        res.status(404).json(e);
+        break;
+      case 'InvalidInputError':
+        res.status(400).json(e);
+        break;
+      default:
+        res.sendStatus(500);
+        throw e;
+    }
+  }
 });
 
 // delete meeting with meetingId
-router.delete('/meetings/:meetingId', (req, res) => database.deleteMeeting(req.params.meetingId)
-        .then(
-            () =>
-                // delete all invitations to this meeting
-               database.deleteAllInvitationsByMeetingId(req.params.meetingId)
-                    .then(
-                        () => {
-                          res.json(true);
-                        },
-                    ),
-        )
-        .catch(
-            (err) => {
-              debug(err);
-              res.sendStatus(500);
-            },
-        ));
+router.delete('/meetings/:meetingId', async (req, res) => {
+  debug('[DELETE /meetings/:meetingId]');
+  try {
+    await meetingsService.deleteOne(req.params.meetingId);
+    res.json({ message: `Meeting ${req.params.meetingId} was deleted successfully!` });
+  } catch (e) {
+    res.sendStatus(500);
+    throw e;
+  }
+});
 
 module.exports = router;

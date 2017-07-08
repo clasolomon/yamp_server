@@ -58,8 +58,8 @@ app.use((req, res, next) => {
 });
 
 // error handler
-app.use((err, req, res) => {
-  debug(err);
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+  debug('app:', err);
     // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
