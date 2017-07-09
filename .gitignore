@@ -17,5 +17,6 @@
 .env
 .swp
 .*.swp
+.*.swo
 npm-debug.log*
 todo.txt
