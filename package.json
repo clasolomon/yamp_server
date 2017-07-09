@@ -1,19 +1,22 @@
 {
-  "name": "meetus",
-  "version": "0.0.0",
+  "name": "yamp_server",
+  "version": "0.1.0",
   "private": true,
+  "description": "Yet Another Meeting Application",
+  "author": "Ioan Claudiu Solomon <claudiusolomon008@gmail.com>",
+  "license": "MIT",
+  "main": "./src/www",
   "scripts": {
     "start": "npm run compile && NODEMAILER_SERVICE=${NODEMAILER_SERVICE} NODEMAILER_USER=${NODEMAILER_USER} NODEMAILER_PASS=${NODEMAILER_PASS} node --inspect ./bin/www",
     "compile": "npm run eslint && rm -rf bin/ test/ && babel src -d bin && babel src_test -d test",
     "test": "npm run compile && NODE_ENV='test' mocha --recursive --reporter spec",
-    "eslint": "eslint --fix src"
+    "eslint": "eslint --fix src src_test"
   },
   "dependencies": {
     "babel-polyfill": "^6.23.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.16.0",
     "cookie-parser": "^1.4.3",
-    "cors": "^2.8.1",
     "debug": "^2.6.0",
     "express": "^4.14.1",
     "express-session": "^1.15.2",
@@ -21,8 +24,7 @@
     "nodemailer": "^4.0.1",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
-    "pug": "^2.0.0-beta10",
-    "serve-favicon": "^2.3.2",
+    "pug": "^2.0.0-rc.2",
     "sqlite3": "^3.1.8",
     "uuid": "^3.0.1"
   },
