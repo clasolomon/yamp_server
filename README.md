@@ -10,6 +10,7 @@ It is created with **Express.js**. It exposes a **REST API**.
 
 The following dependencies where used:
 
+* [Express](https://expressjs.com/) - web framework
 * [Passport](http://passportjs.org/) - authentification
 * [SQlite3](https://github.com/mapbox/node-sqlite3/wiki/API) - database
 * [UUID](https://github.com/kelektiv/node-uuid) - to generate unique identifiers
@@ -18,6 +19,8 @@ The following dependencies where used:
 * [Debug](visionmedia/debug) - debug utility 
 * [ESLint](https://github.com/eslint/eslint) - code linter
 * [Morgan](https://github.com/expressjs/morgan) - HTTP logger 
+* [SwaggerUI](https://github.com/swagger-api/swagger-ui) - documentation
+* [Swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc) - documentation 
 
 For testing the REST API the following dependencies were used:
 
