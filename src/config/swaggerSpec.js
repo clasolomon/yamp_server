@@ -16,7 +16,7 @@ const options = {
     // Import swaggerDefinitions
   swaggerDefinition,
     // Path to the API docs
-  apis: ['./src/routes/users.js'],
+  apis: ['./src/routes/*.js'],
 };
 
 // Initialize swagger-jsdoc -> returns validated swagger spec in json format

@@ -1,0 +1,9 @@
+definitions:
+  Response:
+    properties:
+      message:
+        type: string
+  Error:
+    properties:
+      message:
+        type: string
