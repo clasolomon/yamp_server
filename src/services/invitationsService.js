@@ -115,6 +115,10 @@ async function getById(id) {
 async function deleteOne(id) {
   debug('[deleteOne]');
   try {
+    const invitation = await database.getInvitationById(id);
+    if (!invitation) {
+      throw new NotFoundError('Resource not found!');
+    }
     await database.deleteInvitation(id);
   } catch (e) {
     debug(e);
