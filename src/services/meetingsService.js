@@ -112,6 +112,10 @@ async function getById(id) {
 async function deleteOne(id) {
   debug('[deleteOne]');
   try {
+    const meeting = await database.getMeetingById(id);
+    if (!meeting) {
+      throw new NotFoundError('Resource not found!');
+    }
     await database.deleteAllInvitationsByMeetingId(id);
     await database.deleteMeeting(id);
   } catch (e) {
