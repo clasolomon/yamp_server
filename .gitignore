@@ -15,8 +15,7 @@
 # misc
 .DS_Store
 .env
-.swp
-.*.swp
-.*.swo
+*.swp
+*.swo
 npm-debug.log*
 todo.txt
